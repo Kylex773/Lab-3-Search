@@ -1,6 +1,6 @@
 #  Fall 2024
-#  Team Members:    
-#  % Effort    :   
+#  Team Members: Kyle Carlsen, Patrick Sisk, Aiden Tsingine   
+#  % Effort    : Kyle Objective 3 34%, Patrick Objective 2 33%, Aiden Objective 1 33%
 #
 # ECE369A,  
 # 
@@ -488,8 +488,8 @@ newline: .asciiz     "\n"
 .text
 
 .globl main
-
-0    addi    $sp, $sp, -4    # Make space on stack
+main:
+    addi    $sp, $sp, -4    # Make space on stack
     sw      $ra, 0($sp)     # Save return address
          
     # Start test 1 
@@ -778,5 +778,212 @@ vbsme:
     li      $v0, 0              # reset $v0 and $V1
     li      $v1, 0
 
+
     # insert your code here
    
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    add  $s0, $a1, $0 #s0 is current spot in array
+    lw $s1, 0($a0)  #value of i, rows of frame(big)
+    lw $s2, 4($a0)  #value of j, columns of frame
+    lw $s3, 8($a0)  #value of k, rows of window(small)
+    lw $s4, 12($a0) #value of l, columns of window
+
+    sub  $t7, $s2, $s4 #find itterations till right edge, s4 for rows
+    addi $t7, $t7, 1 #starts offset at 1
+
+    addi $s6, $s6, 2500 #set minimum above any value
+
+    add  $t8, $0, $0 #offset of rows starts at 0
+    add  $t9, $0, $0 #offset of columns starts at 0
+
+    j columnRight #begin search
+
+
+    columnRightPre: #toDo write transitions from rowUp
+    sub $t7, $s2, $s4 #find itterations till right edge
+    add $t7, $t7, $t9 #add column offset
+
+    beq $t7, $0, exit #if loops till edge is 0, then we are done
+
+    sll $t0, $s2, 2 #multiply by 4 for word align
+    add $s0, $s0, $t0 #move down extra row
+    add $s0, $s0, 4 #move right 1
+
+    addi $t9, $t9, -1 #increment column offset
+
+    columnRight:
+    beq $t7, $0, rowDownPre #when edge is hit start moving down
+
+    #toDo SAD function
+    #lw $t6, 0($s0) #print output
+    jal SAD
+
+    addi $s0, $s0, 4 #itterate spot by one column
+    addi $t7, $t7, -1 #move one closer to edge
+    j columnRight #loop
+   
+    
+    rowDownPre:  #toDo write transitions from columnRight
+    sub $s5, $s1, $s3 #find itterations till bottom edge
+    add $s5, $s5, $t8 #add the row offset
+
+    beq $s5, $0, exit #if loops till edge is 0, then we are done
+
+    addi $s0, -4  #move back extra column
+    sll, $t0, $s2, 2 #multiply by 4 for word allign
+    add  $s0, $s0, $t0 #move down row
+
+    addi $t8, $t8, -1 #increment offset value of row
+
+    rowDown:
+    beq $s5, $0 columnLeftPre
+
+    #toDo SAD function
+    #lw $t6, 0($s0) #print output
+    jal SAD
+
+    sll $t0, $s2, 2 #multiply by 4 for word allign
+    add $s0, $s0, $t0 #move down a row
+    addi $s5, $s5, -1 #move one closer to edge
+    j rowDown #loop
+
+    columnLeftPre: #t0Do write transitions from rowDown
+    sub $t7, $s2, $s4 #find itterations till left edge
+    add $t7, $t7, $t9 #add column offset
+
+    beq $t7, $0, exit #if loops till edge is 0, then we are done
+
+    sll $t0, $s2, 2 #multiply by 4 for word allign
+    sub $s0, $s0, $t0 #move up extra row
+    addi $s0, $s0, -4 #move left
+
+    addi $t9, $t9, -1 #increment column offset
+
+    columnLeft:
+    beq $t7, $0, rowUpPre #change direction when edge hit
+
+    #toDo SAD function
+    #lw $t6, 0($s0) #print output
+    jal SAD
+
+    addi $s0, $s0, -4 #move left by one
+    addi $t7, $t7, -1 #move one closer to edge
+
+    j columnLeft #loop
+
+    rowUpPre:
+    sub $s5, $s1, $s3 #find itterations till top edge
+    add $s5, $s5, $t8 #add row offset
+
+    beq $s5, $0, exit #if loops till edge is 0, then we are done
+
+    addi $s0, $s0, 4 #move right extra column
+    sll  $t0, $s2, 2 #multiply by 4 for word align
+    sub $s0, $s0, $t0 #move up a row
+
+    addi $t8, $t8, -1 #increment row offset
+
+    rowUp:
+    beq $s5, $0, columnRightPre #change direction when edge hit
+
+    #toDo SAD function
+    #lw $t6, 0($s0) #print output
+    jal SAD
+
+    sll $t0, $s2, 2 #multiply by 4 for world align
+    sub $s0, $s0, $t0 #move up a row
+    addi $s5, $s5, -1 #move one closer to edge
+    j rowUp #loop
+    
+    .text
+    .globl SAD
+
+    SAD: #SAD function
+    
+    add $t5, $a2, $0        # load top left window unto $t5
+    add $t1, $s3, $0       # load k into t1 reg
+    add $t4, $s0, $0       # load current addrerss into a temp var
+    addi $t0, $zero, 0     # loading zero into the starting SAD sum
+    # add $t5, $s5, $0       # load top left window adress into t5
+Loop1:
+    # slt $t0, $0, $t1        # t0 0 while t1(k) is greater that zero
+    # beq $t0, $0, Here
+    blez $t1, Here
+    add $t2, $s4, $0       # load l into t2 reg
+Loop2:
+    # slt $t0, $0, $t2        # s0 0 while t2(l) is greater that zero
+    # beq $t0, $0, Here2
+    blez $t2, Here2
+    # where I think Aidens code will go
+    
+diff:   
+    # slt $t2, $t1, $a2      # this is the index
+    # beq $t2, $zero, exit   # also index Patrick's code does this
+    lw $t3, 0($t5)           # Patrick's code puts the window address as $t5  
+    lw $t6, 0($t4)           # Patrick's code puts the frame address as $t4
+    sub $t3, $t3, $t6        # subtrack window val and frame val
+    bgez $t3, sum            # abs
+    sub $t3, $zero, $t3      # abs
+
+sum:    
+    add $t0, $t0, $t3        # running sum
+    # addi $s0, $s0, 4       # moving the window to the next value Patrick's code does this
+    # addi $s1, $s1, 4       # moving the frame to the next value Patrick's code does this
+    # addi $t1, $t1, 1       # indexing the count Patrick's code does this
+    # j diff                 # continue to Patrick's code to calculate the adresses     
+
+
+
+
+    # lw $t7, 0($t5)          # For testing
+    addi $t4, $t4, 4        # moving the current address by 4 to get to the next number
+    addi $t5, $t5, 4 
+    addi $t2, $t2, -1       # subtracting l by one
+    j Loop2                 # re looping loop2
+Here2:                      # go here when loop2 is no longer valid
+    sub $t3, $s1, $s4       # calculating the skip value to go to next line
+    sll $t3, $t3, 2         # multiplying skip by 4
+    add $t4, $t4, $t3       # skiping the address to the new line    
+    # addi $t5, $t5, 4
+    addi $t1, $t1, -1       # subtracting k by 1
+    j Loop1                 # re looping loop1
+    
+Here:                       # go here when loop1 is no longer valid
+
+    minimum:
+    slt $t3, $t0, $s6
+    bne $t3, $0, newMin
+    j exitMin
+
+    newMin:
+    add $s6, $t0, $0
+    add $s7, $s0, $0
+
+    exitMin:
+    jr      $ra
+
+    exit:
+    sub $t1, $s7, $a1 #find index in array
+    srl $t1, $t1, 2 #convert from word index
+
+    addi $t2, $0, -1
+
+    loop:
+    slt $t3, $t1, $0 #is t1 < 0
+    bne $t3, $0, colunnIndex #leave if so
+    sub $t1, $t1, $s1 #increment row up
+    addi $t2, $t2, 1 #increment row index
+    j loop
+
+    colunnIndex:
+    add $t1, $t1, $s1 #increment row up
+    
+    add $v0, $0, $t2 #set row index
+    add $v1, $0, $t1
+
+
+    lw $ra, 0($sp)
+    addi $sp, 4
+    jr $ra

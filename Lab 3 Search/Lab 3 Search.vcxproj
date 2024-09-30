@@ -22,6 +22,7 @@
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="index.s" />
     <None Include="test.s" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

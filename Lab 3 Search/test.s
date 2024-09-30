@@ -31,115 +31,115 @@ main:
 
     add  $s0, $a1, $0 #s0 is current spot in array
 
-    lw $t0, 0($a0)  #value of i, rows of frame(big)
-    lw $t1, 4($a0)  #value of j, columns of frame
-    lw $t2, 8($a0)  #value of k, rows of window(small)
-    lw $t3, 12($a0) #value of l, columns of window
+    lw $s1, 0($a0)  #value of i, rows of frame(big)
+    lw $s2, 4($a0)  #value of j, columns of frame
+    lw $s3, 8($a0)  #value of k, rows of window(small)
+    lw $s4, 12($a0) #value of l, columns of window
 
 
 
 
-    sub  $t4, $t1, $t3 #find itterations till right edge, t4 for rows
-    addi $t4, $t4, 1 #starts offset at 1
+    sub  $t7, $s2, $s4 #find itterations till right edge, s4 for rows
+    addi $t7, $t7, 1 #starts offset at 1
 
 
 
-    add  $s1, $0, $0 #offset of rows starts at 0
-    add  $s2, $0, $0 #offset of columns starts at 0
+    add  $t8, $0, $0 #offset of rows starts at 0
+    add  $t9, $0, $0 #offset of columns starts at 0
 
     j columnRight #begin search
 
 
     columnRightPre: #toDo write transitions from rowUp
-    sub $t4, $t1, $t3 #find itterations till right edge
-    add $t4, $t4, $s2 #add column offset
+    sub $t7, $s2, $s4 #find itterations till right edge
+    add $t7, $t7, $t9 #add column offset
 
-    beq $t4, $s0, exit #if loops till edge is 0, then we are done
+    beq $t7, $0, exit #if loops till edge is 0, then we are done
 
-    sll $t6, $t1, 2 #multiply by 4 for word align
-    add $s0, $s0, $t6 #move down extra row
+    sll $t0, $s2, 2 #multiply by 4 for word align
+    add $s0, $s0, $t0 #move down extra row
     add $s0, $s0, 4 #move right 1
 
-    addi $s2, $s2, -1 #increment column offset
+    addi $t9, $t9, -1 #increment column offset
 
     columnRight:
-    beq $t4, $0, rowDownPre #when edge is hit start moving down
+    beq $t7, $0, rowDownPre #when edge is hit start moving down
 
     #toDo SAD function
-    lw $s7, 0($s0) #print output
+    lw $t6, 0($s0) #print output
 
     addi $s0, $s0, 4 #itterate spot by one column
-    addi $t4, $t4, -1 #move one closer to edge
+    addi $t7, $t7, -1 #move one closer to edge
     j columnRight #loop
    
     
     rowDownPre:  #toDo write transitions from columnRight
-    sub $t5, $t0, $t2 #find itterations till bottom edge
-    add $t5, $t5, $s1 #add the row offset
+    sub $s5, $s1, $s3 #find itterations till bottom edge
+    add $s5, $s5, $t8 #add the row offset
 
-    beq $t5, $0, exit #if loops till edge is 0, then we are done
+    beq $s5, $0, exit #if loops till edge is 0, then we are done
 
     addi $s0, -4  #move back extra column
-    sll, $t6, $t1, 2 #multiply by 4 for word allign
-    add  $s0, $s0, $t6 #move down row
+    sll, $t0, $s2, 2 #multiply by 4 for word allign
+    add  $s0, $s0, $t0 #move down row
 
-    addi $s1, $s1, -1 #increment offset value of row
+    addi $t8, $t8, -1 #increment offset value of row
 
     rowDown:
-    beq $t5, $0 columnLeftPre
+    beq $s5, $0 columnLeftPre
 
     #toDo SAD function
-    lw $s7, 0($s0) #print output
+    lw $t6, 0($s0) #print output
 
-    sll $t6, $t1, 2 #multiply by 4 for word allign
-    add $s0, $s0, $t6 #move down a row
-    addi $t5, $t5, -1 #move one closer to edge
+    sll $t0, $s2, 2 #multiply by 4 for word allign
+    add $s0, $s0, $t0 #move down a row
+    addi $s5, $s5, -1 #move one closer to edge
     j rowDown #loop
 
     columnLeftPre: #t0Do write transitions from rowDown
-    sub $t4, $t1, $t3 #find itterations till left edge
-    add $t4, $t4, $s2 #add column offset
+    sub $t7, $s2, $s4 #find itterations till left edge
+    add $t7, $t7, $t9 #add column offset
 
-    beq $t4, $0, exit #if loops till edge is 0, then we are done
+    beq $t7, $0, exit #if loops till edge is 0, then we are done
 
-    sll $t6, $t1, 2 #multiply by 4 for word allign
-    sub $s0, $s0, $t6 #move up extra row
+    sll $t0, $s2, 2 #multiply by 4 for word allign
+    sub $s0, $s0, $t0 #move up extra row
     addi $s0, $s0, -4 #move left
 
-    addi $s2, $s2, -1 #increment column offset
+    addi $t9, $t9, -1 #increment column offset
 
     columnLeft:
-    beq $t4, $0, rowUpPre #change direction when edge hit
+    beq $t7, $0, rowUpPre #change direction when edge hit
 
     #toDo SAD function
-    lw $s7, 0($s0) #print output
+    lw $t6, 0($s0) #print output
 
     addi $s0, $s0, -4 #move left by one
-    addi $t4, $t4, -1 #move one closer to edge
+    addi $t7, $t7, -1 #move one closer to edge
 
     j columnLeft #loop
 
     rowUpPre:
-    sub $t5, $t0, $t2 #find itterations till top edge
-    add $t5, $t5, $s1 #add row offset
+    sub $s5, $s1, $s3 #find itterations till top edge
+    add $s5, $s5, $t8 #add row offset
 
-    beq $t5, $0, exit #if loops till edge is 0, then we are done
+    beq $s5, $0, exit #if loops till edge is 0, then we are done
 
     addi $s0, $s0, 4 #move right extra column
-    sll  $t6, $t1, 2 #multiply by 4 for word align
-    sub $s0, $s0, $t6 #move up a row
+    sll  $t0, $s2, 2 #multiply by 4 for word align
+    sub $s0, $s0, $t0 #move up a row
 
-    addi $s1, $s1, -1 #increment row offset
+    addi $t8, $t8, -1 #increment row offset
 
     rowUp:
-    beq $t5, $0, columnRightPre #change direction when edge hit
+    beq $s5, $0, columnRightPre #change direction when edge hit
 
     #toDo SAD function
-    lw $s7, 0($s0) #print output
+    lw $t6, 0($s0) #print output
 
-    sll $t6, $t1, 2 #multiply by 4 for world align
-    sub $s0, $s0, $t6 #move up a row
-    addi $t5, $t5, -1 #move one closer to edge
+    sll $t0, $s2, 2 #multiply by 4 for world align
+    sub $s0, $s0, $t0 #move up a row
+    addi $s5, $s5, -1 #move one closer to edge
     j rowUp #loop
 
 
